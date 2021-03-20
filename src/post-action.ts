@@ -10,6 +10,7 @@ import * as vcpkgutil from './vcpkg-utils'
 
 async function main(): Promise<void> {
   const doNotCache = (core.getState(vcpkgaction.VCPKG_DO_NOT_CACHE_KEY) ?? false) === "true";
+  const doNotSaveCache = (core.getState(vcpkgaction.VCPKG_DO_NOT_SAVE_CACHE_KEY) ?? false) === "true";
 
   const actionLib = new actionlib.ActionLib();
   const baseUtil = new baseUtilLib.BaseUtilLib(actionLib);
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
           const vcpkgRoot = core.getState(vcpkgaction.VCPKG_ROOT_KEY);
           const cachedPaths: string[] = vcpkgutil.Utils.getAllCachedPaths(actionLib, vcpkgRoot);
 
-          await vcpkgutil.Utils.saveCache(doNotCache, computedCacheKey, cacheHit, cachedPaths);
+          await vcpkgutil.Utils.saveCache(doNotCache || doNotSaveCache, computedCacheKey, cacheHit, cachedPaths);
         }
       });
     core.info('run-vcpkg post action execution succeeded');

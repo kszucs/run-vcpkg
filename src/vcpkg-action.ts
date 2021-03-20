@@ -12,6 +12,7 @@ import * as vcpkgutil from './vcpkg-utils'
 
 // Input names for run-vcpkg only.
 export const doNotCacheInput = 'doNotCache';
+export const doNotSaveCacheInput = 'doNotSaveCache';
 export const additionalCachedPathsInput = 'additionalCachedPaths';
 
 /**
@@ -23,6 +24,7 @@ export const appendedCacheKeyInput = 'appendedCacheKey';
 export const VCPKG_CACHE_COMPUTED_KEY = "VCPKG_CACHE_COMPUTED_KEY";
 export const VCPKG_CACHE_HIT_KEY = "VCPKG_CACHE_HIT_KEY";
 export const VCPKG_DO_NOT_CACHE_KEY = "VCPKG_DO_NOT_CACHE_KEY";
+export const VCPKG_DO_NOT_SAVE_CACHE_KEY = "VCPKG_DO_NOT_SAVE_CACHE_KEY";
 export const VCPKG_ADDED_CACHEKEY_KEY = "VCPKG_ADDED_CACHEKEY_KEY";
 export const VCPKG_ROOT_KEY = "VCPKG_ROOT_KEY";
 export const VCPKG_DO_CACHE_ON_POST_ACTION_KEY = "VCPKG_DO_CACHE_ON_POST_ACTION_KEY";
@@ -30,6 +32,7 @@ export const VCPKG_DO_CACHE_ON_POST_ACTION_KEY = "VCPKG_DO_CACHE_ON_POST_ACTION_
 export class VcpkgAction {
 
   private readonly doNotCache: boolean = false;
+  private readonly doNotSaveCache: boolean = false;
   private hitCacheKey: string | undefined;
   private readonly appendedCacheKey: string;
   private readonly vcpkgRootDir: string;
@@ -37,7 +40,9 @@ export class VcpkgAction {
 
   constructor(private baseUtilLib: BaseUtilLib) {
     this.doNotCache = core.getInput(doNotCacheInput).toLowerCase() === "true";
+    this.doNotSaveCache = core.getInput(doNotSaveCacheInput).toLowerCase() === "true";
     core.saveState(VCPKG_DO_NOT_CACHE_KEY, this.doNotCache ? "true" : "false");
+    core.saveState(VCPKG_DO_NOT_SAVE_CACHE_KEY, this.doNotSaveCache ? "true" : "false");
     this.appendedCacheKey = core.getInput(appendedCacheKeyInput);
     this.vcpkgRootDir = path.normalize(core.getInput(runvcpkglib.vcpkgDirectory));
     vcpkgutil.Utils.ensureDirExists(this.vcpkgRootDir);
@@ -68,7 +73,7 @@ export class VcpkgAction {
   }
 
   private async saveCache(key: string): Promise<void> {
-    await vcpkgutil.Utils.saveCache(this.doNotCache, key, this.hitCacheKey,
+    await vcpkgutil.Utils.saveCache(this.doNotCache || this.doNotSaveCache, key, this.hitCacheKey,
       vcpkgutil.Utils.getAllCachedPaths(this.baseUtilLib.baseLib, this.vcpkgRootDir));
   }
 
